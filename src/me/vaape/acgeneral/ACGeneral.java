@@ -94,6 +94,9 @@ public class ACGeneral extends JavaPlugin implements Listener{
 			
 			switch (label.toLowerCase()) {
 			case "pl":
+				player.sendMessage(ChatColor.BLUE + "Almost all plugins here are custom coded for the best experience. Core plugins include:");
+				player.sendMessage(ChatColor.GRAY + "" + ChatColor.ITALIC + "ACGeneral, CustomGod, Guilds, CombatLog, EnderDragons, ACEvents, CrateDrops, ACVote, Essentials, SilkSpawners");
+				break;
 			case "plugins":
 				player.sendMessage(ChatColor.BLUE + "Almost all plugins here are custom coded for the best experience. Core plugins include:");
 				player.sendMessage(ChatColor.GRAY + "" + ChatColor.ITALIC + "ACGeneral, CustomGod, Guilds, CombatLog, EnderDragons, ACEvents, CrateDrops, ACVote, Essentials, SilkSpawners");
@@ -217,80 +220,40 @@ public class ACGeneral extends JavaPlugin implements Listener{
 		    case "wild":
 		    	ItemStack hand = player.getInventory().getItemInMainHand();
 		    	
-		    	//If first join and doesn't have leaves, give leaves to player
-		    	
-		    	if (!player.hasPlayedBefore()) {
-    				
-		    		boolean hasLeaves = false;
-		    		
-		    		ItemStack[] inventoryItems = player.getInventory().getContents();
-
-    				for (ItemStack item : inventoryItems) {
-    					if (item != null && item.getType() != Material.AIR) {
-    						if (item.getLore() != null) {
-    							if (item.getLore().contains(ChatColor.GRAY + "" + ChatColor.ITALIC + "Use /wild to tp")) {
-    								hasLeaves = true;
-    							}
-    						}
-    					}
-    				}
-    				
-    				if (hasLeaves == false) {
-    		    		Rewards.plugin.giveReward("wild_leaves", player, false);
-    		    		player.sendMessage(ChatColor.RED + "You must be holding Wild Leaves to use /wild. They have been added to your inventory.");
-    		    		return false;
-    		    	}
-    			}
-		    	
-		    	
-		    	if (hand != null && hand.getType() != Material.AIR) {
-		    		if (hand.getItemMeta().getLore() == null) {
-		    			player.sendMessage(ChatColor.RED + "You must hold Wild Leaves to use /wild. They are included in your starter items when you first join.");
-		    			return false;
-		    		}
-		    		if (hand.getItemMeta().getLore().contains(ChatColor.GRAY + "" + ChatColor.ITALIC + "Use /wild to tp")) {
-
-		    			String UUID = player.getUniqueId().toString();
-		    			
-						player.sendMessage(ChatColor.BLUE + "Teleporting to the wild in 5 seconds, don't move...");
-						cancelRunnable(player);
-						tpTasks.remove(UUID);
-						wild = Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+		    	String UUID = player.getUniqueId().toString();
+    			
+				player.sendMessage(ChatColor.BLUE + "Teleporting to the wild in 5 seconds, don't move...");
+				cancelRunnable(player);
+				tpTasks.remove(UUID);
+				wild = Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+					
+					@Override
+					public void run() {
+						if (hand.getAmount() > 0) {
+							player.sendMessage(ChatColor.BLUE + "Teleporting to the wild...");
+							tpTasks.remove(UUID);
+							player.teleport(getRandomLocation(), TeleportCause.COMMAND);
+							hand.setAmount(hand.getAmount() - 1);
 							
-							@Override
-							public void run() {
-								if (hand.getAmount() > 0) {
-									player.sendMessage(ChatColor.BLUE + "Teleporting to the wild...");
-									tpTasks.remove(UUID);
-									player.teleport(getRandomLocation(), TeleportCause.COMMAND);
-									hand.setAmount(hand.getAmount() - 1);
-									
-									//Add player to noFallDamagePlayers for 10 seconds
-									noFallDamagePlayers.add(UUID);
-									Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-										
-										@Override
-										public void run() {
-											noFallDamagePlayers.remove(UUID);
-											Bukkit.getServer().dispatchCommand(player, "sethome");
-										}
-									}, 10 * 20);
+							//Add player to noFallDamagePlayers for 10 seconds
+							noFallDamagePlayers.add(UUID);
+							Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+								
+								@Override
+								public void run() {
+									noFallDamagePlayers.remove(UUID);
+									Bukkit.getServer().dispatchCommand(player, "sethome");
 								}
-								else {
-									player.sendMessage(ChatColor.RED + "You must hold Wild Leaves when teleporting to the wild.");
-									tpTasks.remove(UUID);
-								}
-							}
-						}, 5 * 20); //Count down from 10
-						tpTasks.put(UUID, wild);
-		    		}
-		    		else {
-		    			player.sendMessage(ChatColor.RED + "You must hold Wild Leaves to use /wild. They are included in your starter items when you first join.");
-		    		}
-				}
-				else {
-					player.sendMessage(ChatColor.RED + "You must hold Wild Leaves to use /wild. They are included in your starter items when you first join.");
-				}
+							}, 10 * 20);
+						}
+						else {
+							player.sendMessage(ChatColor.RED + "You must hold Wild Leaves when teleporting to the wild.");
+							tpTasks.remove(UUID);
+						}
+					}
+				}, 5 * 20); //Count down from 10
+				tpTasks.put(UUID, wild);
+				
 		    	break;
 		    	
 		    case "wildleaves":
