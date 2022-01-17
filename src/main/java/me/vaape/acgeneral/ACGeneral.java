@@ -9,11 +9,13 @@ import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Phantom;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.ItemStack;
@@ -203,27 +205,20 @@ public class ACGeneral extends JavaPlugin implements Listener {
 
                         @Override
                         public void run() {
-                            if (hand.getAmount() > 0) {
-                                player.sendMessage(ChatColor.BLUE + "Teleporting to the wild...");
-                                tpTasks.remove(UUID);
-                                player.teleport(getRandomLocation(), TeleportCause.COMMAND);
-                                hand.setAmount(hand.getAmount() - 1);
+                            player.sendMessage(ChatColor.BLUE + "Teleporting to the wild...");
+                            tpTasks.remove(UUID);
+                            player.teleport(getRandomLocation(), TeleportCause.COMMAND);
 
-                                //Add player to noFallDamagePlayers for 10 seconds
-                                noFallDamagePlayers.add(UUID);
-                                Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+                            //Add player to noFallDamagePlayers for 10 seconds
+                            noFallDamagePlayers.add(UUID);
+                            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 
-                                    @Override
-                                    public void run() {
-                                        noFallDamagePlayers.remove(UUID);
-                                        Bukkit.getServer().dispatchCommand(player, "sethome");
-                                    }
-                                }, 10 * 20);
-                            } else {
-                                player.sendMessage(ChatColor.RED + "You must hold Wild Leaves when teleporting to the" +
-                                                           " wild.");
-                                tpTasks.remove(UUID);
-                            }
+                                @Override
+                                public void run() {
+                                    noFallDamagePlayers.remove(UUID);
+                                    Bukkit.getServer().dispatchCommand(player, "sethome");
+                                }
+                            }, 10 * 20);
                         }
                     }, 5 * 20); //Count down from 10
                     tpTasks.put(UUID, wild);
@@ -463,10 +458,21 @@ public class ACGeneral extends JavaPlugin implements Listener {
                 if (x > -100 && x < 250 && z > -100 && z < 350) { //spawn
                     return;
                 } else {
+                    double random = Math.random();
+                    if (random > 0.5) {
+                        return;
+                    }
                     event.getClickedBlock().breakNaturally();
                     event.getClickedBlock().getLocation().getWorld().dropItemNaturally(event.getClickedBlock().getLocation(), new ItemStack(Material.END_PORTAL_FRAME));
                 }
             }
+        }
+    }
+
+    @EventHandler
+    public void onEntitySpanw (EntitySpawnEvent event) {
+        if (event.getEntity() instanceof Phantom) {
+            event.setCancelled(true);
         }
     }
 }
